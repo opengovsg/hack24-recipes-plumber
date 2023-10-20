@@ -11,6 +11,7 @@ import {
 import { Controller, useFormContext } from 'react-hook-form'
 import { ClickAwayListener, FormControl } from '@mui/material'
 import { FormLabel } from '@opengovsg/design-system-react'
+import Hardbreak from '@tiptap/extension-hard-break'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import Table from '@tiptap/extension-table'
@@ -35,6 +36,7 @@ interface EditorProps {
   editable?: boolean
   placeholder?: string
   variablesEnabled?: boolean
+  isRich?: boolean
 }
 const Editor = ({
   onChange,
@@ -42,6 +44,7 @@ const Editor = ({
   editable,
   placeholder,
   variablesEnabled,
+  isRich,
 }: EditorProps) => {
   const priorStepsWithExecutions = useContext(StepExecutionsContext)
   const [showVarSuggestions, setShowVarSuggestions] = useState(false)
@@ -87,12 +90,25 @@ const Editor = ({
 
   // convert new line character into br elem so tiptap can load the content correctly
   content = content.replaceAll('\n', '<br>')
+  if (!isRich) {
+    // this extension is to have <br /> as new line instead of new paragraph
+    // as new paragraph will translate to a double \n\n instead of \n when getText
+    extensions.push(
+      Hardbreak.extend({
+        addKeyboardShortcuts() {
+          return {
+            Enter: () => this.editor.commands.setHardBreak(),
+          }
+        },
+      }),
+    )
+  }
 
   const editor = useEditor({
     extensions,
     content,
     onUpdate: ({ editor }) => {
-      const content = editor.getHTML()
+      const content = isRich ? editor.getHTML() : editor.getText()
       if (content === '<p></p>') {
         // this is when content of the editor is empty
         // set controller value to empty string instead so the required rule can
@@ -133,7 +149,7 @@ const Editor = ({
         onClickAway={() => setShowVarSuggestions(false)}
       >
         <div ref={editorRef}>
-          <MenuBar editor={editor} />
+          {isRich && <MenuBar editor={editor} />}
           <EditorContent
             className="editor__content"
             editor={editor}
@@ -163,6 +179,7 @@ interface RichTextEditorProps {
   disabled?: boolean
   placeholder?: string
   variablesEnabled?: boolean
+  isRich?: boolean
 }
 const RichTextEditor = ({
   required,
@@ -173,6 +190,7 @@ const RichTextEditor = ({
   disabled,
   placeholder,
   variablesEnabled,
+  isRich,
 }: RichTextEditorProps) => {
   const { control } = useFormContext()
   return (
@@ -195,6 +213,7 @@ const RichTextEditor = ({
             editable={!disabled}
             placeholder={placeholder}
             variablesEnabled={variablesEnabled}
+            isRich={isRich}
           />
         )}
       />

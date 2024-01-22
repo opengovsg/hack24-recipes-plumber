@@ -3,7 +3,7 @@ import { IRequest } from '@plumber/types'
 import { NextFunction, RequestHandler, Response, Router } from 'express'
 import multer from 'multer'
 
-import { createPipeHandler } from '@/controllers/recipes'
+import { createPipeHandler, createTileHandler } from '@/controllers/recipes'
 import logger from '@/helpers/logger'
 
 const router = Router()
@@ -28,5 +28,6 @@ function exposeError(handler: RequestHandler) {
 }
 
 router.post('/createPipe', exposeError(createPipeHandler))
+router.post('/createTile', exposeError(createTileHandler))
 
 export default router

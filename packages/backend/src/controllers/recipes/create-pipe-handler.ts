@@ -194,6 +194,8 @@ async function setupStepConnections(
   }
 }
 
+const STEP_VAR_REGEX = /({{step\.[\d]+(?:\.[\da-zA-Z-_]+)+}})/g
+
 const createPipeHandler: RequestHandler = async function (req, res) {
   const params = paramsSchema.parse(req.body)
 
@@ -222,10 +224,51 @@ const createPipeHandler: RequestHandler = async function (req, res) {
         position: index + 1,
         appKey: step.app,
         key: step.event,
-        parameters: step.parameters,
       }),
     ),
   )
+
+  // ***
+  // MAX JANX - support variables in steps by jank parsing.
+  // **
+  //
+  // DANGEROUS IN PROD COS BAD COMPLEXITY.
+  // HI HACKATHON.
+  for (const [i, stepConfig] of params.pipeSteps.entries()) {
+    if (!stepConfig.parameters) {
+      continue
+    }
+
+    // I'M SORRY
+    const rawStringifiedParams = JSON.stringify(stepConfig.parameters)
+    const splitResults = rawStringifiedParams.split(STEP_VAR_REGEX)
+
+    if (splitResults.length === 1) {
+      steps[i] = await steps[i].$query().patchAndFetch({
+        parameters: stepConfig.parameters,
+      })
+      continue
+    }
+
+    const processedStringifiedParamsBits: string[] = []
+
+    for (const splitResult of splitResults) {
+      if (!STEP_VAR_REGEX.test(splitResult)) {
+        processedStringifiedParamsBits.push(splitResult)
+        continue
+      }
+
+      // Replace 2nd part of step with actual step ID.
+      // e.g. {{step.0.answer}} -> {{step.abcd-1234.answer}}
+      const atoms = splitResult.split('.')
+      atoms[1] = steps[Number(atoms[1])].id
+      processedStringifiedParamsBits.push(atoms.join('.'))
+    }
+
+    steps[i] = await steps[i].$query().patchAndFetch({
+      parameters: JSON.parse(processedStringifiedParamsBits.join('')),
+    })
+  }
 
   // Create connections where needed.
   await setupStepConnections(

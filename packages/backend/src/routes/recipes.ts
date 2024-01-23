@@ -27,7 +27,7 @@ function exposeError(handler: RequestHandler) {
   }
 }
 
-router.post('/createPipe', exposeError(createPipeHandler))
-router.post('/createTile', exposeError(createTileHandler))
+router.post('/pipes/create', exposeError(createPipeHandler))
+router.post('/tiles/create', exposeError(createTileHandler))
 
 export default router

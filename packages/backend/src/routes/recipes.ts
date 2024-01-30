@@ -14,6 +14,8 @@ router.use(upload.none())
 function exposeError(handler: RequestHandler) {
   return async (req: IRequest, res: Response, next: NextFunction) => {
     try {
+      // Slow down requests to show loading screen more.
+      await new Promise((resolve) => setTimeout(resolve, 2000))
       logger.http({
         webhookUrl: req.url,
         body: req.body,

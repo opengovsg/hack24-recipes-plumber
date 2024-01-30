@@ -1,6 +1,5 @@
 import { customAlphabet } from 'nanoid/async'
 
-import appConfig from '@/config/app'
 import BaseError from '@/errors/base'
 import { getOrCreateUser } from '@/helpers/auth'
 import { validateAndParseEmail } from '@/helpers/email-validator'
@@ -49,19 +48,15 @@ const requestOtp = async (
     otpSentAt: new Date(),
   })
 
-  if (appConfig.isDev) {
-    // eslint-disable-next-line no-console
-    console.log(`OTP for ${email}: \x1b[45m${otp}\x1b[0m`)
-  } else {
-    // Send otp
-    await sendEmail({
-      subject: 'Your OTP for Plumber',
-      body: `Your OTP is ${otp}. It's valid for ${
-        OTP_VALIDITY_IN_MS / 1000 / 60
-      } minutes.`,
-      recipient: email,
-    })
-  }
+  // Send otp
+  await sendEmail({
+    subject: 'Your OTP for Plumber',
+    body: `Your OTP is ${otp}. It's valid for ${
+      OTP_VALIDITY_IN_MS / 1000 / 60
+    } minutes.`,
+    recipient: email,
+  })
+
   return true
 }
 

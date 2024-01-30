@@ -8,16 +8,16 @@ export default defineConfig({
   // loadVersion injects package.json version into import.meta.env.PACKAGE_VERSION
   plugins: [react(), viteTsconfigPaths(), loadVersion()],
   server: {
-    open: 'http://localhost:3001',
-    port: 3001,
+    open: 'http://localhost:13001',
+    port: 13001,
     proxy: {
       '/graphql': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:13000',
         changeOrigin: true,
         secure: false,
       },
       '/apps': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:13000',
         changeOrigin: true,
         secure: false,
       },
